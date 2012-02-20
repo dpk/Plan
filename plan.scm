@@ -124,12 +124,17 @@
 (define (top-error-handler sym str)
   (display (string-append "Error: " str " (" (symbol->string sym) ")\n")) '())
 
+(define (repl-eof-errh sym str)
+  (if (eq? 'unterminated-expression sym)
+        (exit)
+        (top-error-handler sym str)))
+
 (define stdin* (open-input-file* fileno/stdin))
 (define p-repl (case-lambda
   (() (p-repl toplevel-env))
   ((env)
     (display "> ")
-    (let ((exp (p-read stdin* top-error-handler)))
+    (let ((exp (p-read stdin* repl-eof-errh)))
       (display (p-literal (run exp env))) (newline))
     (p-repl env))))
 

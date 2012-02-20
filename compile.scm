@@ -13,7 +13,6 @@
 (define prim-compilers* (make-hash-table))
 
 (define (compile exp senv) ; senv = static environment
-  (display (string-append "compiling " (p-literal exp) "...\n"))
   (cond ((p-cons? exp)
           (let ((operator (p-car exp)))
             (if (symbol? operator)
@@ -24,7 +23,7 @@
                             (make-compiled (p-prim-compile (hash-table-ref prim-compilers* actualop) (p-cdr exp) senv)))
                           (else
                             (make-compiled (compile-application exp senv)))))
-                  (compile-to-eval exp))))
+                  (make-compiled (compile-application exp senv)))))
         ((symbol? exp)
           (make-compiled (lambda (env k err)
             (let ((val (p-env-lookup env exp)))
