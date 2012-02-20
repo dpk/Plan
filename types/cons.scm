@@ -47,3 +47,8 @@
       ((p-cons? (p-cdr x)) (string-append " " (p-cons-literal (p-cdr x))))
       ((null? (p-cdr x)) "")
       (else (string-append " . " (p-literal (p-cdr x)))))))
+
+(define (p-map f xs)
+  (if (null? xs)
+        '()
+        (p-cons (f (p-car xs)) (p-map f (p-cdr xs)))))

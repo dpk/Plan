@@ -13,7 +13,7 @@
 (define prim-compilers* (make-hash-table))
 
 (define (compile exp senv) ; senv = static environment
-  (display (string-append "compiling " (p-literal exp) "\n"))
+  (display (string-append "compiling " (p-literal exp) "...\n"))
   (cond ((p-cons? exp)
           (let ((operator (p-car exp)))
             (if (symbol? operator)
@@ -23,18 +23,36 @@
                           ((and (p-prim? actualop) (hash-table-exists? prim-compilers* actualop))
                             (make-compiled (p-prim-compile (hash-table-ref prim-compilers* actualop) (p-cdr exp) senv)))
                           (else
-                            (compile-to-eval exp))))
+                            (make-compiled (compile-application exp senv)))))
                   (compile-to-eval exp))))
         ((symbol? exp)
           (make-compiled (lambda (env k err)
-            (p-env-lookup env exp))))
+            (let ((val (p-env-lookup env exp)))
+              (if (eq? val no-binding*)
+                    (err 'unbound-symbol (string-append "unbound symbol: " (symbol->string exp)))
+                    (k val))))))
         (else (compile-to-eval exp))))
 
 (define (compile-to-eval exp)
-  (display (string-append "giving up, compiling to eval: " (p-literal exp) "\n"))
   (make-compiled
     (lambda (env k err)
       (p-eval exp env k err))))
+
+(define (compile-application exp senv)
+  (let* ((operator (compile (p-car exp) senv))
+         (raw-args (p-cdr exp))
+         (args (p-map (lambda (x) (compile x senv)) raw-args)))
+    (lambda (env k err)
+      (p-execute operator env (lambda (opex)
+        (cond ((p-fn? opex)
+                (p-execute-map args env (lambda (parms) (p-apply opex parms env k err)) err))
+              ((p-prim? opex)
+                (p-apply opex raw-args env k err))
+              ((p-macro? opex)
+                (p-expand opex raw-args env (lambda (new-exp)
+                  (p-eval new-exp env k err)) err))
+              ((p-continuation? opex)
+                (p-execute (p-car (p-cdr args)) env (lambda (val) (p-invoke opex val)) err)))) err))))
 
 (define (make-compiled proc)
   (p-obj

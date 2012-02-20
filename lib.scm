@@ -84,6 +84,11 @@
 (p-deffn (/ . xs)
   (k (apply / xs)))
 
+(p-deffn (numerator n)
+  (k (numerator n)))
+(p-deffn (denominator n)
+  (k (denominator n)))
+
 (p-deffn (binding) (k env))
 
 (p-defprim (unquote x) (err 'malformed-quasiquote "can't have unquote (,) outside of quasiquote"))

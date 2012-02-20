@@ -111,13 +111,18 @@
         (k exps)
         (p-eval (p-car exps) env (lambda (evxp)
           (p-eval-map (p-cdr exps) env (p-cons-k evxp k) err)) err)))
+(define (p-execute-map exps env k err)
+  (if (not (p-cons? exps))
+        (k exps)
+        (p-execute (p-car exps) env (lambda (exxp)
+          (p-execute-map (p-cdr exps) env (p-cons-k exxp k) err)) err)))
 (define (p-cons-k h k)
   (lambda (t)
     (k (p-cons h t))))
 
 (define toplevel-env (make-p-env (make-hash-table) '()))
 (define (top-error-handler sym str)
-  (list 'error: sym str))
+  (display (string-append "Error: " str " (" (symbol->string sym) ")\n")) '())
 
 (define stdin* (open-input-file* fileno/stdin))
 (define p-repl (case-lambda
