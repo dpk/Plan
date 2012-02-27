@@ -51,7 +51,7 @@
                 (p-expand opex raw-args env (lambda (new-exp)
                   (p-eval new-exp env k err)) err))
               ((p-continuation? opex)
-                (p-execute (p-car (p-cdr args)) env (lambda (val) (p-invoke opex val)) err)))) err))))
+                (p-execute (p-car args) env (lambda (val) (p-invoke opex val)) err)))) err))))
 
 (define (make-compiled proc)
   (p-obj
