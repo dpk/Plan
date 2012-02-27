@@ -140,3 +140,33 @@
                 ((p= yardstick (car maybe=s))
                   (loop yardstick (cdr maybe=s)))
                 (else (k '()))))))
+
+(p-deffn (type-of x)
+  (k (cond ((symbol? x) 'symbol)
+           ((number? x) 'number)
+           ((null? x) 'nil)
+           ((eq? #t x) 't)
+           (else (p-obj-type x)))))
+
+(define (p-gensym)
+  (let loop ((times 12) (s "gensym-"))
+    (if (> times 0)
+          (loop (- times 1)
+            (string-append s (->string (integer->char (+ 97 (random 26))))))) s))
+(p-deffn (symbol . args)
+  (letrec ((p-symf
+    (case-lambda
+      (() (p-symf (p-gensym) '()))
+      ((s) (p-symf s #t))
+      ((s i?)
+        (k ((if (not (null? i?)) string->symbol string->uninterned-symbol)
+          (cond ((number? s) (number->string s))
+                ((symbol? s) (symbol->string s))
+                ((p-string? s) (scheme-string s)))))))))
+    (apply p-symf args)))
+
+(p-deffn (error . args)
+  (letrec ((p-errf
+    (case-lambda ((desc) (p-errf 'unknown desc))
+                 ((id desc) (err id (plan->scheme desc))))))
+    (apply p-errf args)))
