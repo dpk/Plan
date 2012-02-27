@@ -80,9 +80,11 @@
 
 (define (scheme->plan obj)
   (cond ((pair? obj) (p-cons (scheme->plan (car obj)) (scheme->plan (cdr obj))))
+        ((string? obj) (make-p-string obj))
         ((or (symbol? obj) (number? obj) (null? obj) (eq? #t obj)) obj)))
 (define (plan->scheme obj)
   (cond ((p-cons? obj) (cons (plan->scheme (p-car obj)) (plan->scheme (p-cdr obj))))
+        ((p-string? obj) (scheme-string obj))
         ((or (symbol? obj) (number? obj) (null? obj) (eq? #t obj)) obj)))
 
 (define (make-p-obj)
